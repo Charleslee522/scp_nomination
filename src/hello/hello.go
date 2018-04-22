@@ -1,7 +1,8 @@
-package main
+package hello
 
 import (
 	"fmt"
+
 	"github.com/Charleslee522/stringutil"
 )
 
