@@ -1,0 +1,42 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ledger_test.go",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/scp_nomination/src/ledger",
+            "env": {"GOPATH": "/Users/Charles/go"},
+            "args": [
+                "-test.run",
+                "TestLedger"
+            ]
+        },
+        {
+            "name": "reverse_test.go",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceRoot}/stringutil",
+            "env": {"GOPATH": "/Users/Charles/go"},
+            "args": [
+                "-test.run",
+                "TestReverse"
+            ]
+        },
+        {
+            "name": "hello.go",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            // "port": 2345,
+            // "host": "127.0.0.1",
+            "program": "${fileDirname}",
+            "env": {"GOPATH": "/Users/Charles/go"},
+            "args": [],
+            "showLog": true
+        }
+    ]
+}
