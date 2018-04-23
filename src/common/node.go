@@ -1,11 +1,11 @@
 package common
 
 type Node struct {
-	name string
+	Name string
 	// message  []string
-	priority int
+	Priority int
 }
 
-func (n Node) getName() string {
-	return n.name
+func (n *Node) GetName() string {
+	return n.Name
 }
