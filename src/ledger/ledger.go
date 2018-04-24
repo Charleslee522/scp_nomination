@@ -28,7 +28,7 @@ func (l *Ledger) InsertValues(vPool []Value) {
 }
 
 func (l *Ledger) isSelfLeader() bool {
-	return true
+	return l.GetLeaderNodeName() == l.Node.Name
 }
 
 func (l *Ledger) Nominate() {

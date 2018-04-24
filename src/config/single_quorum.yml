@@ -1,36 +1,49 @@
+default:
+    threshold: 4
+
 node:
     n0:
+        name: n0
         port: 54320
         validators:
             - n1
             - n2
             - n3
             - n4
+        priority: 10
     n1:
+        name: n1
         port: 54321
         validators:
             - n0
             - n2
             - n3
             - n4
+        priority: 5
     n2:
+        name: n2
         port: 54322
         validators:
             - n0
             - n1
             - n3
             - n4
+        priority: 5
     n3:
+        name: n3
         port: 54323
         validators:
             - n0
             - n1
             - n2
             - n4
+        priority: 5
     n4:
+        name: n4
         port: 54324
         validators:
             - n0
             - n1
             - n2
             - n3
+        priority: 5
