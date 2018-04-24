@@ -10,62 +10,66 @@ func init() {
 }
 
 type History struct {
+	nodeName          string
 	quorumThreshold   int
 	blockingThreshold int
-	votes             map[Value]int
-	accepted          map[Value]int
-	confirm           map[Value]int
+
+	votes    *VotingBox
+	accepted *VotingBox
+	confirm  *VotingBox
+
+	selfMessageState map[Value]FederatedVotingState
 }
 
-func NewHistory(n_validator int, quorumThreshold int) History {
-	p := History{quorumThreshold: quorumThreshold, blockingThreshold: n_validator - quorumThreshold + 1}
-	p.votes = make(map[Value]int)
-	p.accepted = make(map[Value]int)
-	p.confirm = make(map[Value]int)
+func NewHistory(nodeName string, n_validator int, quorumThreshold int) History {
+	p := History{nodeName: nodeName, quorumThreshold: quorumThreshold,
+		blockingThreshold: n_validator - quorumThreshold + 1}
+	p.votes = NewVotingBox()
+	p.accepted = NewVotingBox()
+	p.confirm = NewVotingBox()
+	p.selfMessageState = make(map[Value]FederatedVotingState)
 	return p
 }
 
 func (h *History) AppendMessage(msg SCPNomination) {
-	h.AppendVotes(msg.Votes)
-	h.AppendAccepted(msg.Accepted)
+	h.AppendVotes(msg.Votes, msg.NodeName)
+	h.AppendAccepted(msg.Accepted, msg.NodeName)
 }
 
-func (h *History) AppendVotes(values []Value) {
+func (h *History) AppendVotes(values []Value, nodeName string) {
 	for _, value := range values {
-		if h.accepted[value] > 0 || h.confirm[value] > 0 {
+		if h.accepted.HasValue(value) ||
+			h.confirm.HasValue(value) {
 			continue
 		}
-		if h.votes[value] == 0 {
-			h.votes[value] = 1
-		} else {
-			h.votes[value]++
+
+		h.votes.AddVotedNode(value, nodeName)
+		if h.selfMessageState[value] == NONE {
+			h.selfMessageState[value] = VOTES
 		}
 
-		if h.votes[value] >= h.quorumThreshold {
+		if h.votes.Count(value) >= h.quorumThreshold {
 			log.Println(value, "in votes exceed quorum threshold",
 				h.quorumThreshold, ", so it is moved to accepted")
-			delete(h.votes, value)
-			h.accepted[value] = 1
+			h.accepted.AddVotedNode(value, h.nodeName)
+			h.selfMessageState[value] = ACCEPTED
 		}
 	}
 }
 
-func (h *History) AppendAccepted(values []Value) {
+func (h *History) AppendAccepted(values []Value, nodeName string) {
 	for _, value := range values {
-		if h.confirm[value] > 0 {
+		if h.confirm.HasValue(value) {
 			continue
 		}
-		if h.accepted[value] == 0 {
-			h.accepted[value] = 1
-		} else {
-			h.accepted[value]++
-		}
 
-		if h.accepted[value] >= h.quorumThreshold {
+		h.accepted.AddVotedNode(value, nodeName)
+
+		if h.accepted.Count(value) >= h.quorumThreshold {
 			log.Println(value, "in accepted exceed quorum threshold",
 				h.quorumThreshold, ", so it is moved to confirm")
-			delete(h.accepted, value)
-			h.confirm[value] = 1
+			h.confirm.AddVotedNode(value, h.nodeName)
+			h.selfMessageState[value] = CONFIRM
 		}
 	}
 }
