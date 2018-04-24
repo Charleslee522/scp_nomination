@@ -1,7 +1,5 @@
 package ledger
 
-import "log"
-
 import . "github.com/Charleslee522/scp_nomination/src/common"
 
 type Ledger struct {
@@ -39,8 +37,9 @@ func (l *Ledger) Nominate() {
 
 func (l *Ledger) ReceiveMessage(msg SCPNomination) {
 	l.ValueHistory.AppendMessage(msg)
-	log.Println("[VOTES]: ", l.ValueHistory.votes)
-	log.Println("[ACCEPT]: ", l.ValueHistory.accepted)
+	// log.Println("[VOTES]: ", l.ValueHistory.votes)
+	// log.Println("[ACCEPTED]: ", l.ValueHistory.accepted)
+	// log.Println("[CONFIRM]: ", l.ValueHistory.confirm)
 }
 
 func (l *Ledger) Echo() {
@@ -50,14 +49,17 @@ func (l *Ledger) Echo() {
 type FederatedVotingState uint16
 
 const (
-	Votes FederatedVotingState = 1 + iota
-	Accepted
+	VOTES FederatedVotingState = 1 + iota
+	ACCEPTED
+	CONFIRM
 )
 
 func (l *Ledger) GetValueState(value Value) FederatedVotingState {
-	if l.ValueHistory.accepted[value] > 0 {
-		return Accepted
+	if l.ValueHistory.confirm[value] > 0 {
+		return CONFIRM
+	} else if l.ValueHistory.accepted[value] > 0 {
+		return ACCEPTED
 	} else {
-		return Votes
+		return VOTES
 	}
 }

@@ -15,7 +15,7 @@ import (
 // 	n2의 메시지를 받으면 저장 후에 echoing 함
 // 	n3의 메시지를 받으면 저장만 하고, echoing 하지 않음
 
-func TestLedgerSelfLeader(t *testing.T) {
+func TestLedgerFederatedVoting(t *testing.T) {
 	var node1 Node = Node{Name: "n1", Priority: 3}
 	var node2 Node = Node{Name: "n2", Priority: 2}
 	var node3 Node = Node{Name: "n3", Priority: 1}
@@ -42,13 +42,30 @@ func TestLedgerSelfLeader(t *testing.T) {
 	ledger1.ReceiveMessage(msgFrom3)
 	ledger1.ReceiveMessage(msgFrom4)
 
-	if ledger1.GetValueState(v11) != Accepted {
-		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), Accepted)
+	if ledger1.GetValueState(v11) != ACCEPTED {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), ACCEPTED)
 	}
-	if ledger1.GetValueState(v12) != Accepted {
-		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v12), Accepted)
+	if ledger1.GetValueState(v12) != ACCEPTED {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v12), ACCEPTED)
 	}
 
-	ledger1.ReceiveMessage(msgFrom5)
+	ledger1.ReceiveMessage(msgFrom5) // do nothing
 
+	accpetedMsgFrom2 := SCPNomination{Accepted: vPool1, NodeName: node2.GetName()}
+	accpetedMsgFrom3 := SCPNomination{Accepted: vPool1, NodeName: node3.GetName()}
+	accpetedMsgFrom4 := SCPNomination{Accepted: vPool1, NodeName: node4.GetName()}
+	accpetedMsgFrom5 := SCPNomination{Accepted: vPool1, NodeName: node5.GetName()}
+
+	ledger1.ReceiveMessage(accpetedMsgFrom2)
+	ledger1.ReceiveMessage(accpetedMsgFrom3)
+	ledger1.ReceiveMessage(accpetedMsgFrom4)
+
+	if ledger1.GetValueState(v11) != CONFIRM {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), ACCEPTED)
+	}
+	if ledger1.GetValueState(v12) != CONFIRM {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v12), ACCEPTED)
+	}
+
+	ledger1.ReceiveMessage(accpetedMsgFrom5) // do nothing
 }
