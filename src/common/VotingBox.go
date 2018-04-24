@@ -22,7 +22,7 @@ func (v *VotingBox) Count(value Value) int {
 	}
 }
 
-func (v *VotingBox) AddVotedNode(value Value, nodeName string) {
+func (v *VotingBox) Add(value Value, nodeName string) {
 	if v.voting[value] == nil {
 		v.voting[value] = make(map[string]bool)
 	}

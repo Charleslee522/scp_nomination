@@ -43,7 +43,7 @@ func (h *History) AppendVotes(values []Value, nodeName string) {
 			continue
 		}
 
-		h.votes.AddVotedNode(value, nodeName)
+		h.votes.Add(value, nodeName)
 		if h.selfMessageState[value] == NONE {
 			h.selfMessageState[value] = VOTES
 		}
@@ -51,7 +51,7 @@ func (h *History) AppendVotes(values []Value, nodeName string) {
 		if h.votes.Count(value) >= h.quorumThreshold {
 			log.Println(value, "in votes exceed quorum threshold",
 				h.quorumThreshold, ", so it is moved to accepted")
-			h.accepted.AddVotedNode(value, h.nodeName)
+			h.accepted.Add(value, h.nodeName)
 			h.selfMessageState[value] = ACCEPTED
 		}
 	}
@@ -63,12 +63,19 @@ func (h *History) AppendAccepted(values []Value, nodeName string) {
 			continue
 		}
 
-		h.accepted.AddVotedNode(value, nodeName)
+		h.accepted.Add(value, nodeName)
+
+		if h.accepted.Count(value) >= h.blockingThreshold {
+			log.Println(value, "in accepted exceed blocking threshold",
+				h.quorumThreshold, ", so it is moved to accept")
+			h.accepted.Add(value, h.nodeName)
+			h.selfMessageState[value] = ACCEPTED
+		}
 
 		if h.accepted.Count(value) >= h.quorumThreshold {
 			log.Println(value, "in accepted exceed quorum threshold",
 				h.quorumThreshold, ", so it is moved to confirm")
-			h.confirm.AddVotedNode(value, h.nodeName)
+			h.confirm.Add(value, h.nodeName)
 			h.selfMessageState[value] = CONFIRM
 		}
 	}
