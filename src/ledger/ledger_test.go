@@ -6,15 +6,6 @@ import (
 	. "github.com/Charleslee522/scp_nomination/src/common"
 )
 
-// 노드 세 개 정의(n1, n2, n3)
-// 이 테스트의 주인공은 n1
-// n2와 n3을 validator 로 지정
-// 리더 선출(n1) - TestLedgerSelfLeader
-// 	다른 노드의 메시지를 받으면 저장만 하고, echoing 하지 않음
-// 리더 선출(n2) - TestLedgerOtherLeader
-// 	n2의 메시지를 받으면 저장 후에 echoing 함
-// 	n3의 메시지를 받으면 저장만 하고, echoing 하지 않음
-
 func TestLedgerFederatedVotingBasic(t *testing.T) {
 	var node0 Node = Node{Name: "n0", Priority: 3}
 	var node1 Node = Node{Name: "n1", Priority: 2}
