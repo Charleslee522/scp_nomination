@@ -1,0 +1,36 @@
+node:
+    n0:
+        port: 54320
+        validators:
+            - n1
+            - n2
+            - n3
+            - n4
+    n1:
+        port: 54321
+        validators:
+            - n0
+            - n2
+            - n3
+            - n4
+    n2:
+        port: 54322
+        validators:
+            - n0
+            - n1
+            - n3
+            - n4
+    n3:
+        port: 54323
+        validators:
+            - n0
+            - n1
+            - n2
+            - n4
+    n4:
+        port: 54324
+        validators:
+            - n0
+            - n1
+            - n2
+            - n3
