@@ -6,11 +6,6 @@ import (
 	. "github.com/Charleslee522/scp_nomination/src/common"
 )
 
-// func newSCPNomination(data string, node Node) Value {
-// 	m := SCPNomination{data, node.GetName()}
-// 	return m
-// }
-
 // 노드 세 개 정의(n1, n2, n3)
 // 이 테스트의 주인공은 n1
 // n2와 n3을 validator 로 지정
@@ -24,41 +19,36 @@ func TestLedgerSelfLeader(t *testing.T) {
 	var node1 Node = Node{Name: "n1", Priority: 3}
 	var node2 Node = Node{Name: "n2", Priority: 2}
 	var node3 Node = Node{Name: "n3", Priority: 1}
+	var node4 Node = Node{Name: "n4", Priority: 2}
+	var node5 Node = Node{Name: "n5", Priority: 1}
 
-	nodes := []Node{node1, node2, node3}
+	nodes := []Node{node1, node2, node3, node4, node5}
 
 	v11 := Value{Data: "value11"}
 	v12 := Value{Data: "value12"}
-	// v21 := Value{"value21"}
-	// v22 := Value{"value22"}
-	// v31 := Value{"value31"}
-	// v32 := Value{"value32"}
 
-	var ledger1 Ledger = Ledger{Node: node1, Validators: nodes, N_Validator: 3}
-	// var ledger2 Ledger = Ledger{node2, nodes, 3}
-	// var ledger3 Ledger = Ledger{node3, nodes, 3}
+	var ledger1 *Ledger = NewLedger(node1, nodes, 4)
 	vPool1 := []Value{v11, v12}
-	// vPool2 := []Value{v21, v22}
-	// vPool3 := []Value{v31, v32}
 
 	ledger1.InsertValues(vPool1)
 	ledger1.Nominate()
 
-	msgFrom2 := SCPNomination{}
-	msgFrom2.Votes = append(msgFrom2.Votes, vPool1[0])
-	msgFrom2.Votes = append(msgFrom2.Votes, vPool1[1])
-	msgFrom2.NodeName = node2.GetName()
-
-	msgFrom3 := SCPNomination{}
-	msgFrom3.Votes = append(msgFrom3.Votes, vPool1[0])
-	msgFrom3.Votes = append(msgFrom3.Votes, vPool1[1])
-	msgFrom3.NodeName = node3.GetName()
+	msgFrom2 := SCPNomination{Votes: vPool1, NodeName: node2.GetName()}
+	msgFrom3 := SCPNomination{Votes: vPool1, NodeName: node3.GetName()}
+	msgFrom4 := SCPNomination{Votes: vPool1, NodeName: node4.GetName()}
+	msgFrom5 := SCPNomination{Votes: vPool1, NodeName: node5.GetName()}
 
 	ledger1.ReceiveMessage(msgFrom2)
 	ledger1.ReceiveMessage(msgFrom3)
+	ledger1.ReceiveMessage(msgFrom4)
 
-	if ledger1.GetValueState(&v11) != Accepted {
-		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(&v11), Accepted)
+	if ledger1.GetValueState(v11) != Accepted {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), Accepted)
 	}
+	if ledger1.GetValueState(v12) != Accepted {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v12), Accepted)
+	}
+
+	ledger1.ReceiveMessage(msgFrom5)
 
 }
