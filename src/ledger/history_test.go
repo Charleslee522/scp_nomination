@@ -5,7 +5,7 @@ import (
 )
 
 func TestHistory(t *testing.T) {
-	history := NewHistory("n0", 5, 4)
+	history := NewHistory("n0", "n0", 5, 4)
 	if history.quorumThreshold != 4 {
 		t.Errorf("history.quorumThreshold == %q, want 4", history.quorumThreshold)
 	}
@@ -13,7 +13,7 @@ func TestHistory(t *testing.T) {
 		t.Errorf("history.blockingThreshold == %q, want 2", history.blockingThreshold)
 	}
 
-	history2 := NewHistory("n0", 5, 5)
+	history2 := NewHistory("n0", "n0", 5, 5)
 	if history2.quorumThreshold != 5 {
 		t.Errorf("history2.quorumThreshold == %q, want 4", history.quorumThreshold)
 	}
@@ -21,7 +21,7 @@ func TestHistory(t *testing.T) {
 		t.Errorf("history2.blockingThreshold == %q, want 2", history.blockingThreshold)
 	}
 
-	history3 := NewHistory("n0", 5, 3)
+	history3 := NewHistory("n0", "n0", 5, 3)
 	if history3.quorumThreshold != 3 {
 		t.Errorf("history3.quorumThreshold == %q, want 4", history.quorumThreshold)
 	}

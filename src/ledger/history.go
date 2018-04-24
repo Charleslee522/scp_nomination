@@ -11,6 +11,7 @@ func init() {
 
 type History struct {
 	nodeName          string
+	leaderName        string
 	quorumThreshold   int
 	blockingThreshold int
 
@@ -21,9 +22,9 @@ type History struct {
 	selfMessageState map[Value]FederatedVotingState
 }
 
-func NewHistory(nodeName string, n_validator int, quorumThreshold int) History {
-	p := History{nodeName: nodeName, quorumThreshold: quorumThreshold,
-		blockingThreshold: n_validator - quorumThreshold + 1}
+func NewHistory(nName string, lName string, n_validator int, qTh int) History {
+	p := History{nodeName: nName, leaderName: lName, quorumThreshold: qTh,
+		blockingThreshold: n_validator - qTh + 1}
 	p.votes = NewVotingBox()
 	p.accepted = NewVotingBox()
 	p.confirm = NewVotingBox()

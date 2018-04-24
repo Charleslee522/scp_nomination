@@ -19,7 +19,7 @@ func NewLedger(node Node, validators []Node, quorumThreshold int) *Ledger {
 	p.Node = node
 	p.Validators = validators
 	p.N_validator = quorumThreshold
-	p.ValueHistory = NewHistory(node.Name, len(validators), quorumThreshold)
+	p.ValueHistory = NewHistory(node.Name, p.GetLeaderNodeName(), len(validators), quorumThreshold)
 	return p
 }
 
@@ -66,4 +66,16 @@ func (l *Ledger) GetValueState(value Value) FederatedVotingState {
 		return NONE
 	}
 	return l.ValueHistory.selfMessageState[value]
+}
+
+func (l *Ledger) GetLeaderNodeName() string {
+	maxPriority := 0
+	leaderNodeName := l.Node.Name
+	for _, node := range l.Validators {
+		if maxPriority < node.Priority {
+			maxPriority = node.Priority
+			leaderNodeName = node.Name
+		}
+	}
+	return leaderNodeName
 }
