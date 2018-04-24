@@ -5,17 +5,17 @@ import . "github.com/Charleslee522/scp_nomination/src/common"
 type Ledger struct {
 	Node         Node
 	Validators   []Node
-	N_validator  uint16
+	N_validator  int
 	ValuePool    []Value
 	ValueHistory History
 }
 
-func NewLedger(node Node, validators []Node, n_validator uint16) *Ledger {
+func NewLedger(node Node, validators []Node, quorumThreshold int) *Ledger {
 	p := new(Ledger)
 	p.Node = node
 	p.Validators = validators
-	p.N_validator = n_validator
-	p.ValueHistory = NewHistory(n_validator)
+	p.N_validator = quorumThreshold
+	p.ValueHistory = NewHistory(len(validators), quorumThreshold)
 	return p
 }
 
@@ -30,7 +30,6 @@ func (l *Ledger) isSelfLeader() bool {
 func (l *Ledger) Nominate() {
 	// if leader
 	if l.isSelfLeader() {
-		// l.ValueHistory = append(l.ValueHistory, l.ValuePool...)
 		l.ValueHistory.AppendVotes(l.ValuePool)
 	}
 }

@@ -10,17 +10,18 @@ func init() {
 }
 
 type History struct {
-	quorumThreshold uint16
-	votes           map[Value]uint16
-	accepted        map[Value]uint16
-	confirm         map[Value]uint16
+	quorumThreshold   int
+	blockingThreshold int
+	votes             map[Value]int
+	accepted          map[Value]int
+	confirm           map[Value]int
 }
 
-func NewHistory(n_validator uint16) History {
-	p := History{quorumThreshold: n_validator}
-	p.votes = make(map[Value]uint16)
-	p.accepted = make(map[Value]uint16)
-	p.confirm = make(map[Value]uint16)
+func NewHistory(n_validator int, quorumThreshold int) History {
+	p := History{quorumThreshold: quorumThreshold, blockingThreshold: n_validator - quorumThreshold + 1}
+	p.votes = make(map[Value]int)
+	p.accepted = make(map[Value]int)
+	p.confirm = make(map[Value]int)
 	return p
 }
 

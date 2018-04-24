@@ -46,7 +46,7 @@ func TestLedgerFederatedVoting(t *testing.T) {
 		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), ACCEPTED)
 	}
 	if ledger1.GetValueState(v12) != ACCEPTED {
-		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v12), ACCEPTED)
+		t.Errorf("v12 State == %q, want %q", ledger1.GetValueState(v12), ACCEPTED)
 	}
 
 	ledger1.ReceiveMessage(msgFrom5) // do nothing
@@ -64,7 +64,7 @@ func TestLedgerFederatedVoting(t *testing.T) {
 		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), ACCEPTED)
 	}
 	if ledger1.GetValueState(v12) != CONFIRM {
-		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v12), ACCEPTED)
+		t.Errorf("v12 State == %q, want %q", ledger1.GetValueState(v12), ACCEPTED)
 	}
 
 	ledger1.ReceiveMessage(accpetedMsgFrom5) // do nothing
