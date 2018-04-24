@@ -79,3 +79,7 @@ func (l *Ledger) GetLeaderNodeName() string {
 	}
 	return leaderNodeName
 }
+
+func (l *Ledger) GetNominatedValues() []Value {
+	return l.ValueHistory.confirmValues
+}

@@ -178,4 +178,5 @@ func TestLedgerFederatedVotingByBlockingThreshold(t *testing.T) {
 	}
 
 	ledger1.ReceiveMessage(accpetedMsgFrom4) // do nothing
+
 }

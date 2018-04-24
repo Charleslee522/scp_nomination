@@ -20,6 +20,7 @@ type History struct {
 	confirm  *VotingBox
 
 	selfMessageState map[Value]FederatedVotingState
+	confirmValues    []Value
 }
 
 func NewHistory(nName string, lName string, n_validator int, qTh int) History {
@@ -29,6 +30,7 @@ func NewHistory(nName string, lName string, n_validator int, qTh int) History {
 	p.accepted = NewVotingBox()
 	p.confirm = NewVotingBox()
 	p.selfMessageState = make(map[Value]FederatedVotingState)
+	p.confirmValues = []Value{}
 	return p
 }
 
@@ -78,6 +80,7 @@ func (h *History) AppendAccepted(values []Value, nodeName string) {
 				h.quorumThreshold, ", so it is moved to confirm")
 			h.confirm.Add(value, h.nodeName)
 			h.selfMessageState[value] = CONFIRM
+			h.confirmValues = append(h.confirmValues, value)
 		}
 	}
 }
