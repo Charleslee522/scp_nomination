@@ -1,5 +1,5 @@
 default:
-    threshold: 4
+    threshold: 5
 
 node:
     n0:
@@ -55,3 +55,6 @@ node:
             - n2
             - n3
         priority: 5
+        messages:
+            - message3 from n4
+            - message4 from n4

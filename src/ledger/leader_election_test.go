@@ -17,7 +17,14 @@ func TestLedgerLeaderElection(t *testing.T) {
 
 	var ledger0 *Ledger = NewLedger(node0, nodes, 4)
 	ledger0.Consensus.isInTest = true
-	if ledger0.Consensus.GetLeaderNodeName() != "n0" {
-		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetLeaderNodeName(), "n0")
+	ledger0.Consensus.round = 1
+	if ledger0.Consensus.GetRoundLeader() != "n4" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n4")
 	}
+
+	ledger0.Consensus.round = 2
+	if ledger0.Consensus.GetRoundLeader() != "n0" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n0")
+	}
+
 }

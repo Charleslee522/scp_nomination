@@ -50,14 +50,14 @@ type Consensus struct {
 func NewConsensus(nName string, qTh int,
 	validators []Node) Consensus {
 	p := Consensus{nodeName: nName, nodePriority: GetPriority(0, nName), quorumThreshold: qTh,
-		blockingThreshold: len(validators) + 1 - qTh + 1}
+		blockingThreshold: len(validators) + 1 - qTh + 1, round: 1}
 	p.votes = NewVotingBox()
 	p.accepted = NewVotingBox()
 	p.confirm = NewVotingBox()
 	p.selfMessageState = make(map[Value]FederatedVotingState)
 	p.confirmValues = []Value{}
 	p.Validators = validators
-	p.leaders = append(p.leaders, p.GetLeaderNodeName())
+	p.leaders = append(p.leaders, p.GetRoundLeader())
 	channels[nName] = make(ChannelValueType)
 	p.channels = channels
 	p.msgQueue = MutexQueue{M: []SCPNomination{}}
@@ -74,7 +74,7 @@ func (c *Consensus) InsertValues(messages []string) {
 
 func (c *Consensus) Nominate() {
 	// if leader
-	if c.isSelfLeader() {
+	if c.isLeader(c.nodeName) {
 		time.Sleep(100 * time.Microsecond)
 		c.AppendVotes(c.ValuePool, c.nodeName)
 		c.broadcast()
@@ -197,8 +197,8 @@ func (c *Consensus) broadcast() {
 	}
 }
 
-func (c *Consensus) GetLeaderNodeName() string {
-	maxPriority := c.nodePriority
+func (c *Consensus) GetRoundLeader() string {
+	maxPriority := GetPriority(c.round, c.nodeName)
 	leaderNodeName := c.nodeName
 	for _, node := range c.Validators {
 		priority := GetPriority(c.round, node.Name)
@@ -210,9 +210,9 @@ func (c *Consensus) GetLeaderNodeName() string {
 	return leaderNodeName
 }
 
-func (c *Consensus) isSelfLeader() bool {
+func (c *Consensus) isLeader(nodeName string) bool {
 	for _, leaderName := range c.leaders {
-		if leaderName == c.nodeName {
+		if leaderName == nodeName {
 			return true
 		}
 	}
@@ -221,8 +221,11 @@ func (c *Consensus) isSelfLeader() bool {
 
 func (c *Consensus) ReceiveMessage(msg SCPNomination) {
 	log.Println(c.nodeName, "receive message ", msg)
+	if time.Since(c.roundClock) > time.Duration(100*c.round)*time.Millisecond {
+		c.round++
+	}
 	c.AppendMessage(msg)
-	if c.GetLeaderNodeName() == msg.NodeName {
+	if c.isLeader(msg.NodeName) {
 		c.echo()
 	}
 }

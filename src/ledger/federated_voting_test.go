@@ -7,11 +7,11 @@ import (
 )
 
 func TestLedgerFederatedVotingBasic(t *testing.T) {
-	var node0 Node = Node{Name: "n0"}
+	var node0 Node = Node{Name: "n4"}
 	var node1 Node = Node{Name: "n1"}
 	var node2 Node = Node{Name: "n2"}
 	var node3 Node = Node{Name: "n3"}
-	var node4 Node = Node{Name: "n4"}
+	var node4 Node = Node{Name: "n0"}
 
 	nodes := []Node{node1, node2, node3, node4}
 
@@ -63,11 +63,11 @@ func TestLedgerFederatedVotingBasic(t *testing.T) {
 }
 
 func TestLedgerFederatedVotingReceiveDuplicatedMessage(t *testing.T) {
-	var node0 Node = Node{Name: "n0"}
+	var node0 Node = Node{Name: "n4"}
 	var node1 Node = Node{Name: "n1"}
 	var node2 Node = Node{Name: "n2"}
 	var node3 Node = Node{Name: "n3"}
-	var node4 Node = Node{Name: "n4"}
+	var node4 Node = Node{Name: "n0"}
 
 	nodes := []Node{node1, node2, node3, node4}
 
@@ -130,11 +130,11 @@ func TestLedgerFederatedVotingReceiveDuplicatedMessage(t *testing.T) {
 }
 
 func TestLedgerFederatedVotingByBlockingThreshold(t *testing.T) {
-	var node0 Node = Node{Name: "n0"}
+	var node0 Node = Node{Name: "n4"}
 	var node1 Node = Node{Name: "n1"}
 	var node2 Node = Node{Name: "n2"}
 	var node3 Node = Node{Name: "n3"}
-	var node4 Node = Node{Name: "n4"}
+	var node4 Node = Node{Name: "n0"}
 
 	nodes := []Node{node1, node2, node3, node4}
 
