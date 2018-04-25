@@ -180,4 +180,11 @@ func TestLedgerFederatedVotingNoLeaderByBlockingThreshold(t *testing.T) {
 
 	ledger1.Consensus.ReceiveMessage(accpetedMsgFrom4) // do nothing
 
+	if ledger1.GetValueState(v11) != CONFIRM {
+		t.Errorf("v11 State == %q, want %q", ledger1.GetValueState(v11), CONFIRM)
+	}
+	if ledger1.GetValueState(v12) != CONFIRM {
+		t.Errorf("v12 State == %q, want %q", ledger1.GetValueState(v12), CONFIRM)
+	}
+
 }

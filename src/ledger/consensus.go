@@ -96,13 +96,18 @@ func (c *Consensus) AppendVotes(values []Value, nodeName string) {
 		}
 
 		if c.votes.Count(value) >= c.quorumThreshold {
-			log.Println(c.nodeName, "in votes", value, "exceed quorum threshold",
+			log.Println(c.nodeName, "value in votes", value, "exceed quorum threshold",
 				c.quorumThreshold, ", so it is moved to accepted")
 			c.accepted.Add(value, c.nodeName)
 			c.selfMessageState[value] = ACCEPTED
 			c.broadcast()
+			c.logSelfState()
 		}
 	}
+}
+
+func (c *Consensus) logSelfState() {
+	log.Println(c.nodeName, "self messages states are ", c.selfMessageState)
 }
 
 func (c *Consensus) AppendAccepted(values []Value, nodeName string) {
@@ -113,21 +118,23 @@ func (c *Consensus) AppendAccepted(values []Value, nodeName string) {
 
 		c.accepted.Add(value, nodeName)
 
-		if c.accepted.Count(value) >= c.blockingThreshold {
-			log.Println(value, "in accepted exceed blocking threshold",
+		if c.selfMessageState[value] < ACCEPTED && c.accepted.Count(value) >= c.blockingThreshold {
+			log.Println(c.nodeName, "value in accepted", value, " exceed blocking threshold",
 				c.quorumThreshold, ", so it is moved to accept")
 			c.accepted.Add(value, c.nodeName)
 			c.selfMessageState[value] = ACCEPTED
 			c.broadcast()
+			c.logSelfState()
 		}
 
 		if c.accepted.Count(value) >= c.quorumThreshold {
-			log.Println(value, "in accepted exceed quorum threshold",
+			log.Println(c.nodeName, "value in accepted", value, " exceed quorum threshold",
 				c.quorumThreshold, ", so it is moved to confirm")
 			c.confirm.Add(value, c.nodeName)
 			c.selfMessageState[value] = CONFIRM
 			c.confirmValues = append(c.confirmValues, value)
 			c.broadcast()
+			c.logSelfState()
 		}
 	}
 }
@@ -151,7 +158,6 @@ func (c *Consensus) echo() {
 			continue
 		}
 		c.sendMessage(msg, node.Name)
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -181,7 +187,6 @@ func (c *Consensus) broadcast() {
 			continue
 		}
 		c.sendMessage(msg, node.Name)
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -235,10 +240,9 @@ func (c *Consensus) Start() {
 		for {
 			msg := Read(&c.msgQueue)
 			if msg.NodeName == "" {
-				time.Sleep(1000 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 				continue
 			}
-			log.Println(c.nodeName, "pull msg from queue", msg)
 			c.ReceiveMessage(msg)
 		}
 	}()
@@ -247,9 +251,7 @@ func (c *Consensus) Start() {
 		select {
 		case msg := <-c.channels[c.nodeName]:
 			Write(&c.msgQueue, msg)
-			log.Println(c.nodeName, "msg to queue ", msg)
 		default:
 		}
-		time.Sleep(500 * time.Millisecond)
 	}
 }
