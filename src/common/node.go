@@ -5,6 +5,7 @@ type Node struct {
 	Priority   int
 	Port       int
 	Validators []string
+	Messages   []string
 }
 
 func (n *Node) GetName() string {

@@ -11,6 +11,9 @@ node:
             - n3
             - n4
         priority: 10
+        messages:
+            - message from n0
+            - message2 from n0
     n1:
         name: n1
         port: 54321

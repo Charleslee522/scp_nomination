@@ -2,30 +2,33 @@ package ledger
 
 import (
 	"testing"
+
+	. "github.com/Charleslee522/scp_nomination/src/common"
 )
 
-func TestHistory(t *testing.T) {
-	history := NewConsensus("n0", "n0", 5, 4)
-	if history.quorumThreshold != 4 {
-		t.Errorf("history.quorumThreshold == %q, want 4", history.quorumThreshold)
+func TestConsensus(t *testing.T) {
+	nodes := []Node{Node{}, Node{}, Node{}, Node{}}
+	consensus := NewConsensus("n0", 1, 4, nodes)
+	if consensus.quorumThreshold != 4 {
+		t.Errorf("consensus.quorumThreshold == %d, want 4", consensus.quorumThreshold)
 	}
-	if history.blockingThreshold != 2 {
-		t.Errorf("history.blockingThreshold == %q, want 2", history.blockingThreshold)
-	}
-
-	history2 := NewConsensus("n0", "n0", 5, 5)
-	if history2.quorumThreshold != 5 {
-		t.Errorf("history2.quorumThreshold == %q, want 4", history.quorumThreshold)
-	}
-	if history2.blockingThreshold != 1 {
-		t.Errorf("history2.blockingThreshold == %q, want 2", history.blockingThreshold)
+	if consensus.blockingThreshold != 2 {
+		t.Errorf("consensus.blockingThreshold == %d, want 2", consensus.blockingThreshold)
 	}
 
-	history3 := NewConsensus("n0", "n0", 5, 3)
-	if history3.quorumThreshold != 3 {
-		t.Errorf("history3.quorumThreshold == %q, want 4", history.quorumThreshold)
+	consensus2 := NewConsensus("n0", 1, 5, nodes)
+	if consensus2.quorumThreshold != 5 {
+		t.Errorf("consensus2.quorumThreshold == %d, want 4", consensus.quorumThreshold)
 	}
-	if history3.blockingThreshold != 3 {
-		t.Errorf("history3.blockingThreshold == %q, want 2", history.blockingThreshold)
+	if consensus2.blockingThreshold != 1 {
+		t.Errorf("consensus2.blockingThreshold == %d, want 2", consensus.blockingThreshold)
+	}
+
+	consensus3 := NewConsensus("n0", 1, 3, nodes)
+	if consensus3.quorumThreshold != 3 {
+		t.Errorf("consensus3.quorumThreshold == %d, want 4", consensus.quorumThreshold)
+	}
+	if consensus3.blockingThreshold != 3 {
+		t.Errorf("consensus3.blockingThreshold == %d, want 2", consensus.blockingThreshold)
 	}
 }

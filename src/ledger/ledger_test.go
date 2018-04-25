@@ -16,8 +16,8 @@ func TestLedgerLeaderSelf(t *testing.T) {
 	nodes := []Node{node0, node1, node2, node3, node4}
 
 	var ledger1 *Ledger = NewLedger(node0, nodes, 4)
-	if ledger1.GetLeaderNodeName() != "n0" {
-		t.Errorf("Ledger.GetLeaderNodeName() == %q, want n0", ledger1.GetLeaderNodeName())
+	if ledger1.Consensus.GetLeaderNodeName() != "n0" {
+		t.Errorf("Ledger.GetLeaderNodeName() == %q, want n0", ledger1.Consensus.GetLeaderNodeName())
 	}
 }
 
@@ -31,7 +31,7 @@ func TestLedgerLeaderTheOther(t *testing.T) {
 	nodes := []Node{node0, node1, node2, node3, node4}
 
 	var ledger1 *Ledger = NewLedger(node0, nodes, 4)
-	if ledger1.GetLeaderNodeName() != "n2" {
-		t.Errorf("Ledger.GetLeaderNodeName() == %q, want n2", ledger1.GetLeaderNodeName())
+	if ledger1.Consensus.GetLeaderNodeName() != "n2" {
+		t.Errorf("Ledger.GetLeaderNodeName() == %q, want n2", ledger1.Consensus.GetLeaderNodeName())
 	}
 }

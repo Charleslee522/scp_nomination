@@ -2,18 +2,31 @@ package ledger
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	. "github.com/Charleslee522/scp_nomination/src/common"
 )
 
+type ChannelValueType chan SCPNomination
+type ChannelType map[string]ChannelValueType
+
+var channels ChannelType
+
 func init() {
 	log.SetPrefix("[Trace] ")
 	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Llongfile)
+	channels = make(ChannelType)
+}
+
+type MutexQueue struct {
+	M    []SCPNomination
+	Lock sync.RWMutex
 }
 
 type Consensus struct {
 	nodeName          string
+	nodePriority      int
 	leaderName        string
 	quorumThreshold   int
 	blockingThreshold int
@@ -26,12 +39,16 @@ type Consensus struct {
 	confirmValues    []Value
 	Validators       []Node
 	channels         ChannelType
+	ValuePool        []Value
+
+	msgQueue MutexQueue
+	isInTest bool
 }
 
-func NewConsensus(nName string, n_validator int,
-	qTh int, validators []Node, channels *ChannelType) Consensus {
-	p := Consensus{nodeName: nName, quorumThreshold: qTh,
-		blockingThreshold: n_validator - qTh + 1}
+func NewConsensus(nName string, priority int, qTh int,
+	validators []Node) Consensus {
+	p := Consensus{nodeName: nName, nodePriority: priority, quorumThreshold: qTh,
+		blockingThreshold: len(validators) + 1 - qTh + 1}
 	p.votes = NewVotingBox()
 	p.accepted = NewVotingBox()
 	p.confirm = NewVotingBox()
@@ -39,7 +56,25 @@ func NewConsensus(nName string, n_validator int,
 	p.confirmValues = []Value{}
 	p.Validators = validators
 	p.leaderName = p.GetLeaderNodeName()
+	channels[nName] = make(ChannelValueType)
+	p.channels = channels
+	p.msgQueue = MutexQueue{M: []SCPNomination{}}
 	return p
+}
+
+func (c *Consensus) InsertValues(messages []string) {
+	for _, msg := range messages {
+		c.ValuePool = append(c.ValuePool, Value{msg})
+	}
+}
+
+func (c *Consensus) Nominate() {
+	// if leader
+	if c.isSelfLeader() {
+		time.Sleep(100 * time.Microsecond)
+		c.AppendVotes(c.ValuePool, c.nodeName)
+		c.broadcast()
+	}
 }
 
 func (c *Consensus) AppendMessage(msg SCPNomination) {
@@ -51,6 +86,7 @@ func (c *Consensus) AppendVotes(values []Value, nodeName string) {
 	for _, value := range values {
 		if c.accepted.HasValue(value) ||
 			c.confirm.HasValue(value) {
+			log.Println(c.nodeName, "has value", value)
 			continue
 		}
 
@@ -60,12 +96,12 @@ func (c *Consensus) AppendVotes(values []Value, nodeName string) {
 		}
 
 		if c.votes.Count(value) >= c.quorumThreshold {
-			log.Println(value, "in votes exceed quorum threshold",
+			log.Println(c.nodeName, "in votes", value, "exceed quorum threshold",
 				c.quorumThreshold, ", so it is moved to accepted")
 			c.accepted.Add(value, c.nodeName)
 			c.selfMessageState[value] = ACCEPTED
+			c.broadcast()
 		}
-		go c.broadcast()
 	}
 }
 
@@ -82,6 +118,7 @@ func (c *Consensus) AppendAccepted(values []Value, nodeName string) {
 				c.quorumThreshold, ", so it is moved to accept")
 			c.accepted.Add(value, c.nodeName)
 			c.selfMessageState[value] = ACCEPTED
+			c.broadcast()
 		}
 
 		if c.accepted.Count(value) >= c.quorumThreshold {
@@ -90,32 +127,43 @@ func (c *Consensus) AppendAccepted(values []Value, nodeName string) {
 			c.confirm.Add(value, c.nodeName)
 			c.selfMessageState[value] = CONFIRM
 			c.confirmValues = append(c.confirmValues, value)
+			c.broadcast()
 		}
 	}
 }
 
 func (c *Consensus) echo() {
-	msg := SCPNomination{Votes: []Value{}, Accepted: []Value{}, NodeName: c.nodeName}
+	if c.isInTest {
+		return
+	}
+	votes := []Value{}
+	accepted := []Value{}
+	for value, state := range c.selfMessageState {
+		if state == VOTES || state == ACCEPTED {
+			votes = append(votes, value)
+		} else {
+			// do nothing
+		}
+	}
+	msg := SCPNomination{Votes: votes, Accepted: accepted, NodeName: c.nodeName}
 	for _, node := range c.Validators {
 		if node.Name == c.nodeName {
 			continue
 		}
-		c.channels[node.Name] <- msg
+		c.sendMessage(msg, node.Name)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
-func (c *Consensus) sendMessage(msg *SCPNomination, toNodeName string) {
-	select {
-	case c.channels[toNodeName] <- *msg:
-		log.Println(c.nodeName, "send message in ", msg, " to ", toNodeName)
-		break
-	default:
-		log.Println("nope")
-	}
+func (c *Consensus) sendMessage(msg SCPNomination, toNodeName string) {
+	log.Println(c.nodeName, " to ", toNodeName, "send message", msg)
+	c.channels[toNodeName] <- msg
 }
 
 func (c *Consensus) broadcast() {
-	log.Println(c.nodeName, "broadcast")
+	if c.isInTest {
+		return
+	}
 	votes := []Value{}
 	accepted := []Value{}
 	for value, state := range c.selfMessageState {
@@ -127,19 +175,18 @@ func (c *Consensus) broadcast() {
 			// do nothing
 		}
 	}
-
 	msg := SCPNomination{Votes: votes, Accepted: accepted, NodeName: c.nodeName}
 	for _, node := range c.Validators {
 		if node.Name == c.nodeName {
 			continue
 		}
-		go c.sendMessage(&msg, node.Name)
-		time.Sleep(200 * time.Millisecond)
+		c.sendMessage(msg, node.Name)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 func (c *Consensus) GetLeaderNodeName() string {
-	maxPriority := 0
+	maxPriority := c.nodePriority
 	leaderNodeName := c.nodeName
 	for _, node := range c.Validators {
 		if maxPriority < node.Priority {
@@ -152,4 +199,57 @@ func (c *Consensus) GetLeaderNodeName() string {
 
 func (c *Consensus) isSelfLeader() bool {
 	return c.GetLeaderNodeName() == c.nodeName
+}
+
+func (c *Consensus) ReceiveMessage(msg SCPNomination) {
+	log.Println(c.nodeName, "receive message ", msg)
+	c.AppendMessage(msg)
+	if c.GetLeaderNodeName() == msg.NodeName {
+		c.echo()
+	}
+}
+
+func Read(queue *MutexQueue) SCPNomination {
+	queue.Lock.RLock()
+	defer queue.Lock.RUnlock()
+	if len(queue.M) == 0 {
+		return SCPNomination{}
+	} else {
+		msg := queue.M[0]
+		queue.M = queue.M[1:]
+		return msg
+	}
+}
+func Write(queue *MutexQueue, msg SCPNomination) {
+	queue.Lock.Lock()
+	defer queue.Lock.Unlock()
+	queue.M = append(queue.M, msg)
+}
+
+func (c *Consensus) Start() {
+	if len(c.votes.Voting) == 0 &&
+		len(c.accepted.Voting) == 0 {
+		c.Nominate()
+	}
+	go func() {
+		for {
+			msg := Read(&c.msgQueue)
+			if msg.NodeName == "" {
+				time.Sleep(1000 * time.Millisecond)
+				continue
+			}
+			log.Println(c.nodeName, "pull msg from queue", msg)
+			c.ReceiveMessage(msg)
+		}
+	}()
+
+	for {
+		select {
+		case msg := <-c.channels[c.nodeName]:
+			Write(&c.msgQueue, msg)
+			log.Println(c.nodeName, "msg to queue ", msg)
+		default:
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
 }
