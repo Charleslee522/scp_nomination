@@ -44,11 +44,14 @@ type Consensus struct {
 	ValuePool        []Value
 
 	msgQueue MutexQueue
+
+	faultyRound []int
+	isFaulty    bool
+
 	isInTest bool
 }
 
-func NewConsensus(nName string, qTh int,
-	validators []Node) Consensus {
+func NewConsensus(nName string, qTh int, validators []Node) Consensus {
 	p := Consensus{nodeName: nName, nodePriority: GetPriority(0, nName), quorumThreshold: qTh,
 		blockingThreshold: len(validators) + 1 - qTh + 1, round: 1}
 	p.votes = NewVotingBox()
@@ -66,6 +69,14 @@ func NewConsensus(nName string, qTh int,
 	return p
 }
 
+func NewFaultyConsensus(nName string, qTh int, validators []Node, faultyRound []int) Consensus {
+	p := NewConsensus(nName, qTh, validators)
+	p.faultyRound = faultyRound
+	p.isFaulty = true
+
+	return p
+}
+
 func (c *Consensus) InsertValues(messages []string) {
 	for _, msg := range messages {
 		c.ValuePool = append(c.ValuePool, Value{msg})
@@ -75,7 +86,9 @@ func (c *Consensus) InsertValues(messages []string) {
 func (c *Consensus) Nominate() {
 	// if leader
 	if c.isLeader(c.nodeName) {
-		time.Sleep(100 * time.Microsecond)
+		if c.round == 1 {
+			time.Sleep(100 * time.Microsecond)
+		}
 		c.AppendVotes(c.ValuePool, c.nodeName)
 		c.broadcast()
 	}
@@ -143,10 +156,26 @@ func (c *Consensus) AppendAccepted(values []Value, nodeName string) {
 	}
 }
 
-func (c *Consensus) echo() {
+func (c *Consensus) isOutsider() bool {
 	if c.isInTest {
+		return true
+	}
+
+	if c.isFaulty {
+		for _, faultyRound := range c.faultyRound {
+			if c.round == faultyRound {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (c *Consensus) echo() {
+	if c.isOutsider() {
 		return
 	}
+
 	votes := []Value{}
 	accepted := []Value{}
 	for value, state := range c.selfMessageState {
@@ -171,7 +200,7 @@ func (c *Consensus) sendMessage(msg SCPNomination, toNodeName string) {
 }
 
 func (c *Consensus) broadcast() {
-	if c.isInTest {
+	if c.isOutsider() {
 		return
 	}
 	votes := []Value{}
@@ -221,8 +250,11 @@ func (c *Consensus) isLeader(nodeName string) bool {
 
 func (c *Consensus) ReceiveMessage(msg SCPNomination) {
 	log.Println(c.nodeName, "receive message ", msg)
-	if time.Since(c.roundClock) > time.Duration(100*c.round)*time.Millisecond {
+	if time.Since(c.roundClock) > time.Duration(c.round)*300*time.Millisecond {
 		c.round++
+		log.Println(c.nodeName, "round change", c.round)
+		log.Println(c.nodeName, "time since: ", time.Since(c.roundClock))
+		c.Nominate()
 	}
 	c.AppendMessage(msg)
 	if c.isLeader(msg.NodeName) {

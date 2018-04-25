@@ -1,8 +1,11 @@
 default:
-    threshold: 4
+    threshold: 5
 
 node:
     n0:
+        kind: 1 # faulty
+        faultyround:
+            - 1
         name: n0
         port: 54320
         validators:
@@ -42,10 +45,7 @@ node:
             - n4
         priority: 5
     n4:
-        kind: 1 # faulty
-        faultyround:
-            - 0
-            - 1
+        kind: 0
         name: n4
         port: 54324
         validators:
@@ -54,3 +54,6 @@ node:
             - n2
             - n3
         priority: 5
+        messages:
+            - message3 from n4
+            - message4 from n4

@@ -14,7 +14,13 @@ func NewLedger(node Node, validators []Node, quorumThreshold int) *Ledger {
 	p := new(Ledger)
 	p.Node = node
 	p.N_validator = quorumThreshold
-	p.Consensus = NewConsensus(node.Name, quorumThreshold, validators)
+	if node.Kind == 0 {
+		p.Consensus = NewConsensus(node.Name, quorumThreshold, validators)
+	} else if node.Kind == 1 {
+		p.Consensus = NewFaultyConsensus(node.Name, quorumThreshold, validators, node.FaultyRound)
+	} else {
+		p.Consensus = Consensus{}
+	}
 	return p
 }
 
