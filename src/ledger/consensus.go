@@ -26,10 +26,11 @@ type MutexQueue struct {
 
 type Consensus struct {
 	nodeName          string
-	nodePriority      int
+	nodePriority      string
 	leaderName        string
 	quorumThreshold   int
 	blockingThreshold int
+	round             int
 
 	votes    *VotingBox
 	accepted *VotingBox
@@ -45,9 +46,9 @@ type Consensus struct {
 	isInTest bool
 }
 
-func NewConsensus(nName string, priority int, qTh int,
+func NewConsensus(nName string, qTh int,
 	validators []Node) Consensus {
-	p := Consensus{nodeName: nName, nodePriority: priority, quorumThreshold: qTh,
+	p := Consensus{nodeName: nName, nodePriority: GetPriority(0, nName), quorumThreshold: qTh,
 		blockingThreshold: len(validators) + 1 - qTh + 1}
 	p.votes = NewVotingBox()
 	p.accepted = NewVotingBox()
@@ -59,6 +60,7 @@ func NewConsensus(nName string, priority int, qTh int,
 	channels[nName] = make(ChannelValueType)
 	p.channels = channels
 	p.msgQueue = MutexQueue{M: []SCPNomination{}}
+
 	return p
 }
 
@@ -181,6 +183,9 @@ func (c *Consensus) broadcast() {
 			// do nothing
 		}
 	}
+	if len(votes)+len(accepted) == 0 {
+		return
+	}
 	msg := SCPNomination{Votes: votes, Accepted: accepted, NodeName: c.nodeName}
 	for _, node := range c.Validators {
 		if node.Name == c.nodeName {
@@ -194,8 +199,9 @@ func (c *Consensus) GetLeaderNodeName() string {
 	maxPriority := c.nodePriority
 	leaderNodeName := c.nodeName
 	for _, node := range c.Validators {
-		if maxPriority < node.Priority {
-			maxPriority = node.Priority
+		priority := GetPriority(c.round, node.Name)
+		if maxPriority < priority {
+			maxPriority = priority
 			leaderNodeName = node.Name
 		}
 	}

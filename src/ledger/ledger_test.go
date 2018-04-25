@@ -7,31 +7,31 @@ import (
 )
 
 func TestLedgerLeaderSelf(t *testing.T) {
-	var node0 Node = Node{Name: "n0", Priority: 3}
-	var node1 Node = Node{Name: "n1", Priority: 2}
-	var node2 Node = Node{Name: "n2", Priority: 1}
-	var node3 Node = Node{Name: "n3", Priority: 2}
-	var node4 Node = Node{Name: "n4", Priority: 1}
+	var node0 Node = Node{Name: "n0"}
+	var node1 Node = Node{Name: "n1"}
+	var node2 Node = Node{Name: "n2"}
+	var node3 Node = Node{Name: "n3"}
+	var node4 Node = Node{Name: "n4"}
 
 	nodes := []Node{node0, node1, node2, node3, node4}
 
-	var ledger1 *Ledger = NewLedger(node0, nodes, 4)
-	if ledger1.Consensus.GetLeaderNodeName() != "n0" {
-		t.Errorf("Ledger.GetLeaderNodeName() == %q, want n0", ledger1.Consensus.GetLeaderNodeName())
+	var ledger0 *Ledger = NewLedger(node0, nodes, 4)
+	if ledger0.Consensus.GetLeaderNodeName() != "n0" {
+		t.Errorf("Ledger.GetLeaderNodeName() == %s, want n0", ledger0.Consensus.GetLeaderNodeName())
 	}
 }
 
 func TestLedgerLeaderTheOther(t *testing.T) {
-	var node0 Node = Node{Name: "n0", Priority: 3}
-	var node1 Node = Node{Name: "n1", Priority: 2}
-	var node2 Node = Node{Name: "n2", Priority: 6}
-	var node3 Node = Node{Name: "n3", Priority: 2}
-	var node4 Node = Node{Name: "n4", Priority: 1}
+	var node0 Node = Node{Name: "n0"}
+	var node1 Node = Node{Name: "n1"}
+	var node2 Node = Node{Name: "n2"}
+	var node3 Node = Node{Name: "n3"}
+	var node4 Node = Node{Name: "n4"}
 
 	nodes := []Node{node0, node1, node2, node3, node4}
 
-	var ledger1 *Ledger = NewLedger(node0, nodes, 4)
-	if ledger1.Consensus.GetLeaderNodeName() != "n2" {
-		t.Errorf("Ledger.GetLeaderNodeName() == %q, want n2", ledger1.Consensus.GetLeaderNodeName())
+	var ledger0 *Ledger = NewLedger(node0, nodes, 4)
+	if ledger0.Consensus.GetLeaderNodeName() != "n0" {
+		t.Errorf("Ledger.GetLeaderNodeName() == %s, want n0", ledger0.Consensus.GetLeaderNodeName())
 	}
 }

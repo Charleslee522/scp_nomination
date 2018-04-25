@@ -3,7 +3,6 @@ default:
 
 node:
     n0:
-        kind: 0 # normal
         name: n0
         port: 54320
         validators:
@@ -16,7 +15,6 @@ node:
             - message from n0
             - message2 from n0
     n1:
-        kind: 0 # normal
         name: n1
         port: 54321
         validators:
@@ -26,7 +24,6 @@ node:
             - n4
         priority: 5
     n2:
-        kind: 0 # normal
         name: n2
         port: 54322
         validators:
@@ -36,7 +33,6 @@ node:
             - n4
         priority: 5
     n3:
-        kind: 0 # normal
         name: n3
         port: 54323
         validators:
@@ -46,7 +42,10 @@ node:
             - n4
         priority: 5
     n4:
-        kind: 0 # normal
+        kind: 1 # faulty
+        faultyround:
+            - 0
+            - 1
         name: n4
         port: 54324
         validators:

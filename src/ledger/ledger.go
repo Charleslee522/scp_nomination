@@ -14,7 +14,7 @@ func NewLedger(node Node, validators []Node, quorumThreshold int) *Ledger {
 	p := new(Ledger)
 	p.Node = node
 	p.N_validator = quorumThreshold
-	p.Consensus = NewConsensus(node.Name, node.Priority, quorumThreshold, validators)
+	p.Consensus = NewConsensus(node.Name, quorumThreshold, validators)
 	return p
 }
 
