@@ -15,7 +15,7 @@ var channels ChannelType
 
 func init() {
 	log.SetPrefix("[Trace] ")
-	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Llongfile)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	channels = make(ChannelType)
 }
 
@@ -27,10 +27,11 @@ type MutexQueue struct {
 type Consensus struct {
 	nodeName          string
 	nodePriority      string
-	leaderName        string
+	leaders           []string
 	quorumThreshold   int
 	blockingThreshold int
 	round             int
+	roundClock        time.Time
 
 	votes    *VotingBox
 	accepted *VotingBox
@@ -56,10 +57,11 @@ func NewConsensus(nName string, qTh int,
 	p.selfMessageState = make(map[Value]FederatedVotingState)
 	p.confirmValues = []Value{}
 	p.Validators = validators
-	p.leaderName = p.GetLeaderNodeName()
+	p.leaders = append(p.leaders, p.GetLeaderNodeName())
 	channels[nName] = make(ChannelValueType)
 	p.channels = channels
 	p.msgQueue = MutexQueue{M: []SCPNomination{}}
+	p.roundClock = time.Now()
 
 	return p
 }
@@ -209,7 +211,12 @@ func (c *Consensus) GetLeaderNodeName() string {
 }
 
 func (c *Consensus) isSelfLeader() bool {
-	return c.GetLeaderNodeName() == c.nodeName
+	for _, leaderName := range c.leaders {
+		if leaderName == c.nodeName {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Consensus) ReceiveMessage(msg SCPNomination) {
@@ -231,10 +238,21 @@ func Read(queue *MutexQueue) SCPNomination {
 		return msg
 	}
 }
+
 func Write(queue *MutexQueue, msg SCPNomination) {
 	queue.Lock.Lock()
 	defer queue.Lock.Unlock()
 	queue.M = append(queue.M, msg)
+}
+
+func (c *Consensus) GetConfirmedValues() []Value {
+	result := []Value{}
+	for value, state := range c.selfMessageState {
+		if state == CONFIRM {
+			result = append(result, value)
+		}
+	}
+	return result
 }
 
 func (c *Consensus) Start() {
@@ -242,14 +260,23 @@ func (c *Consensus) Start() {
 		len(c.accepted.Voting) == 0 {
 		c.Nominate()
 	}
+	quit := make(chan bool)
 	go func() {
+		start := time.Now()
 		for {
 			msg := Read(&c.msgQueue)
 			if msg.NodeName == "" {
+				log.Println("read time: ", time.Since(start))
+				if time.Since(start) > 1000*time.Millisecond {
+					quit <- true
+					return
+				}
 				time.Sleep(200 * time.Millisecond)
 				continue
 			}
+
 			c.ReceiveMessage(msg)
+			start = time.Now()
 		}
 	}()
 
@@ -257,6 +284,9 @@ func (c *Consensus) Start() {
 		select {
 		case msg := <-c.channels[c.nodeName]:
 			Write(&c.msgQueue, msg)
+		case <-quit:
+			log.Println("quit event")
+			return
 		default:
 		}
 	}

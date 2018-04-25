@@ -52,9 +52,11 @@ func run(c *Config) {
 		nodes[v.Name] = v
 	}
 
+	ledgers := []Ledger{}
 	for _, v := range c.Node {
 		ledger := NewLedger(v, GetNodeSlice(nodes, v.Validators), threshold)
 		ledger.Consensus.InsertValues(v.Messages)
+		ledgers = append(ledgers, *ledger)
 		go func(ledger *Ledger) {
 			ledger.Start()
 		}(ledger)
@@ -62,6 +64,11 @@ func run(c *Config) {
 
 	var input string
 	fmt.Scanln(&input)
+
+	for _, ledger := range ledgers {
+		fmt.Print(ledger.Node.Name, " has values -> ")
+		fmt.Println(ledger.Consensus.GetConfirmedValues())
+	}
 }
 
 func main() {
