@@ -12,11 +12,15 @@ type ChannelValueType chan SCPNomination
 type ChannelType map[string]ChannelValueType
 
 var channels ChannelType
+var roundChannels ChannelType
+
+const Delay time.Duration = 100
 
 func init() {
 	log.SetPrefix("[Trace] ")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	channels = make(ChannelType)
+	roundChannels = make(ChannelType)
 }
 
 type MutexQueue struct {
@@ -30,8 +34,9 @@ type Consensus struct {
 	leaders           []string
 	quorumThreshold   int
 	blockingThreshold int
-	round             int
-	roundClock        time.Time
+	Round             int
+	roundTime         time.Time
+	quit              chan bool
 
 	votes    *VotingBox
 	accepted *VotingBox
@@ -41,6 +46,7 @@ type Consensus struct {
 	confirmValues    []Value
 	Validators       []Node
 	channels         ChannelType
+	roundChannels    ChannelType
 	ValuePool        []Value
 
 	msgQueue MutexQueue
@@ -53,7 +59,7 @@ type Consensus struct {
 
 func NewConsensus(nName string, qTh int, validators []Node) Consensus {
 	p := Consensus{nodeName: nName, nodePriority: GetPriority(0, nName), quorumThreshold: qTh,
-		blockingThreshold: len(validators) + 1 - qTh + 1, round: 1}
+		blockingThreshold: len(validators) + 1 - qTh + 1, Round: 1}
 	p.votes = NewVotingBox()
 	p.accepted = NewVotingBox()
 	p.confirm = NewVotingBox()
@@ -63,18 +69,37 @@ func NewConsensus(nName string, qTh int, validators []Node) Consensus {
 	p.leaders = append(p.leaders, p.GetRoundLeader())
 	channels[nName] = make(ChannelValueType)
 	p.channels = channels
+	roundChannels[nName] = make(ChannelValueType)
+	p.roundChannels = roundChannels
 	p.msgQueue = MutexQueue{M: []SCPNomination{}}
-	p.roundClock = time.Now()
+	p.roundTime = time.Now()
+	p.RoundReset()
+	p.quit = make(chan bool)
 
 	return p
 }
-
 func NewFaultyConsensus(nName string, qTh int, validators []Node, faultyRound []int) Consensus {
 	p := NewConsensus(nName, qTh, validators)
 	p.faultyRound = faultyRound
 	p.isFaulty = true
 
 	return p
+}
+
+func (c *Consensus) RoundReset() {
+	// c.Round++
+	// log.Println(c.nodeName, "Round change to", c.Round)
+	// c.leaders = append(c.leaders, c.GetRoundLeader())
+	// log.Println(c.nodeName, "add Round leader ", c.GetRoundLeader())
+	// c.Nominate()
+	// time.AfterFunc(c.GetRoundDuration(), func() {
+	// 	// msg := SCPNomination{NodeName: "ROUND"}
+	// 	// c.channels[c.nodeName] <- msg
+	// })
+}
+
+func (c *Consensus) GetRoundDuration() time.Duration {
+	return time.Duration(c.Round+1) * Delay * time.Millisecond
 }
 
 func (c *Consensus) InsertValues(messages []string) {
@@ -86,7 +111,7 @@ func (c *Consensus) InsertValues(messages []string) {
 func (c *Consensus) Nominate() {
 	// if leader
 	if c.isLeader(c.nodeName) {
-		if c.round == 1 {
+		if c.Round == 1 {
 			time.Sleep(100 * time.Microsecond)
 		}
 		c.AppendVotes(c.ValuePool, c.nodeName)
@@ -163,7 +188,7 @@ func (c *Consensus) isOutsider() bool {
 
 	if c.isFaulty {
 		for _, faultyRound := range c.faultyRound {
-			if c.round == faultyRound {
+			if c.Round == faultyRound {
 				return true
 			}
 		}
@@ -172,7 +197,9 @@ func (c *Consensus) isOutsider() bool {
 }
 
 func (c *Consensus) echo() {
+	log.Println(c.nodeName, " echo")
 	if c.isOutsider() {
+		log.Println(c.nodeName, " in testing or no voting Round, so do not echo")
 		return
 	}
 
@@ -200,7 +227,9 @@ func (c *Consensus) sendMessage(msg SCPNomination, toNodeName string) {
 }
 
 func (c *Consensus) broadcast() {
+	log.Println(c.nodeName, " broadcast")
 	if c.isOutsider() {
+		log.Println(c.nodeName, " in testing or no voting Round, so do not broadcast")
 		return
 	}
 	votes := []Value{}
@@ -227,10 +256,10 @@ func (c *Consensus) broadcast() {
 }
 
 func (c *Consensus) GetRoundLeader() string {
-	maxPriority := GetPriority(c.round, c.nodeName)
+	maxPriority := GetPriority(c.Round, c.nodeName)
 	leaderNodeName := c.nodeName
 	for _, node := range c.Validators {
-		priority := GetPriority(c.round, node.Name)
+		priority := GetPriority(c.Round, node.Name)
 		if maxPriority < priority {
 			maxPriority = priority
 			leaderNodeName = node.Name
@@ -250,12 +279,6 @@ func (c *Consensus) isLeader(nodeName string) bool {
 
 func (c *Consensus) ReceiveMessage(msg SCPNomination) {
 	log.Println(c.nodeName, "receive message ", msg)
-	if time.Since(c.roundClock) > time.Duration(c.round)*300*time.Millisecond {
-		c.round++
-		log.Println(c.nodeName, "round change", c.round)
-		log.Println(c.nodeName, "time since: ", time.Since(c.roundClock))
-		c.Nominate()
-	}
 	c.AppendMessage(msg)
 	if c.isLeader(msg.NodeName) {
 		c.echo()
@@ -280,6 +303,12 @@ func Write(queue *MutexQueue, msg SCPNomination) {
 	queue.M = append(queue.M, msg)
 }
 
+func PreWrite(queue *MutexQueue, msg SCPNomination) {
+	queue.Lock.Lock()
+	defer queue.Lock.Unlock()
+	queue.M = append([]SCPNomination{msg}, queue.M...)
+}
+
 func (c *Consensus) GetConfirmedValues() []Value {
 	result := []Value{}
 	for value, state := range c.selfMessageState {
@@ -295,7 +324,7 @@ func (c *Consensus) Start() {
 		len(c.accepted.Voting) == 0 {
 		c.Nominate()
 	}
-	quit := make(chan bool)
+
 	go func() {
 		start := time.Now()
 		for {
@@ -303,15 +332,17 @@ func (c *Consensus) Start() {
 			if msg.NodeName == "" {
 				log.Println("read time: ", time.Since(start))
 				if time.Since(start) > 1000*time.Millisecond {
-					quit <- true
+					c.quit <- true
 					return
 				}
 				time.Sleep(200 * time.Millisecond)
-				continue
+			} else if msg.NodeName == "ROUND" {
+				log.Println(c.nodeName, "New Round Message Receive")
+				c.RoundReset()
+			} else {
+				c.ReceiveMessage(msg)
+				start = time.Now()
 			}
-
-			c.ReceiveMessage(msg)
-			start = time.Now()
 		}
 	}()
 
@@ -319,8 +350,10 @@ func (c *Consensus) Start() {
 		select {
 		case msg := <-c.channels[c.nodeName]:
 			Write(&c.msgQueue, msg)
-		case <-quit:
-			log.Println("quit event")
+		case msg := <-c.roundChannels[c.nodeName]:
+			PreWrite(&c.msgQueue, msg)
+		case <-c.quit:
+			log.Println("quit Start()")
 			return
 		default:
 		}
