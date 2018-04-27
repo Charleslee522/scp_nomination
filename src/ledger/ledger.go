@@ -8,7 +8,7 @@ import (
 
 type Ledger struct {
 	Node      Node
-	Consensus Consensus
+	Consensus *Consensus
 }
 
 func NewLedger(node Node, validators []Node, quorumThresholdPercent int) *Ledger {
@@ -21,7 +21,7 @@ func NewLedger(node Node, validators []Node, quorumThresholdPercent int) *Ledger
 	} else if node.Kind == 1 {
 		p.Consensus = NewFaultyConsensus(node.Name, n_validator, validators, node.FaultyRound)
 	} else {
-		p.Consensus = Consensus{}
+		p.Consensus = new(Consensus)
 	}
 	return p
 }

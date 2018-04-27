@@ -1,5 +1,5 @@
 default:
-    threshold: 100
+    threshold: 80
 
 node:
     n0:
