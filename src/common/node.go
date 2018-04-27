@@ -8,6 +8,7 @@ type Node struct {
 	Port        int
 	Validators  []string
 	Messages    []string
+	Threshold   int
 }
 
 func (n *Node) GetName() string {

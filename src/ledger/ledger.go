@@ -1,23 +1,25 @@
 package ledger
 
 import (
+	"log"
+
 	. "github.com/Charleslee522/scp_nomination/src/common"
 )
 
 type Ledger struct {
-	Node        Node
-	N_validator int
-	Consensus   Consensus
+	Node      Node
+	Consensus Consensus
 }
 
-func NewLedger(node Node, validators []Node, quorumThreshold int) *Ledger {
+func NewLedger(node Node, validators []Node, quorumThresholdPercent int) *Ledger {
 	p := new(Ledger)
 	p.Node = node
-	p.N_validator = quorumThreshold
+	n_validator := (len(validators) + 1) * quorumThresholdPercent / 100
+	log.Println(node.Name, "has", n_validator, "validators ")
 	if node.Kind == 0 {
-		p.Consensus = NewConsensus(node.Name, quorumThreshold, validators)
+		p.Consensus = NewConsensus(node.Name, n_validator, validators)
 	} else if node.Kind == 1 {
-		p.Consensus = NewFaultyConsensus(node.Name, quorumThreshold, validators, node.FaultyRound)
+		p.Consensus = NewFaultyConsensus(node.Name, n_validator, validators, node.FaultyRound)
 	} else {
 		p.Consensus = Consensus{}
 	}

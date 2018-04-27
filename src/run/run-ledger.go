@@ -45,18 +45,25 @@ func GetNodeSlice(nodesMap map[string]Node, validators []string) []Node {
 }
 
 func run(c *Config) {
-	threshold := c.Default["threshold"]
+	defaultThreshold := c.Default["threshold"]
 	nodes := make(map[string]Node)
 
 	for _, v := range c.Node {
 		nodes[v.Name] = v
 	}
 
-	ledgers := []Ledger{}
+	ledgers := []*Ledger{}
 	for _, v := range c.Node {
+		threshold := v.Threshold
+		if threshold == 0 {
+			threshold = defaultThreshold
+		}
 		ledger := NewLedger(v, GetNodeSlice(nodes, v.Validators), threshold)
 		ledger.Consensus.InsertValues(v.Messages)
-		ledgers = append(ledgers, *ledger)
+		ledgers = append(ledgers, ledger)
+	}
+
+	for _, ledger := range ledgers {
 		go func(ledger *Ledger) {
 			ledger.Start()
 		}(ledger)

@@ -336,13 +336,14 @@ func (c *Consensus) Start() {
 					return
 				}
 				time.Sleep(200 * time.Millisecond)
+				continue
 			} else if msg.NodeName == "ROUND" {
-				log.Println(c.nodeName, "New Round Message Receive")
-				c.RoundReset()
+				// log.Println(c.nodeName, "New Round Message Receive")
+				// c.RoundReset()
 			} else {
-				c.ReceiveMessage(msg)
-				start = time.Now()
 			}
+			c.ReceiveMessage(msg)
+			start = time.Now()
 		}
 	}()
 
@@ -350,8 +351,8 @@ func (c *Consensus) Start() {
 		select {
 		case msg := <-c.channels[c.nodeName]:
 			Write(&c.msgQueue, msg)
-		case msg := <-c.roundChannels[c.nodeName]:
-			PreWrite(&c.msgQueue, msg)
+		// case msg := <-c.roundChannels[c.nodeName]:
+		// 	PreWrite(&c.msgQueue, msg)
 		case <-c.quit:
 			log.Println("quit Start()")
 			return

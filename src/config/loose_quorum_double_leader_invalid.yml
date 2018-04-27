@@ -1,5 +1,5 @@
 default:
-    threshold: 80
+    threshold: 100
 
 node:
     n0:
@@ -56,5 +56,5 @@ node:
             - n3
             - n0
         messages:
-            - message51
-            - message52
+            - message4151
+            - message4252
