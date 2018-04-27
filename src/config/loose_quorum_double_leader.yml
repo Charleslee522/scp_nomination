@@ -1,0 +1,60 @@
+default:
+    threshold: 3
+
+node:
+    n0:
+        name: n0
+        validators:
+            - n1
+            - n2
+            - n3
+            - n5
+        messages:
+            - message01
+            - message02
+    n1:
+        name: n1
+        validators:
+            - n0
+            - n2
+            - n3
+            - n4
+        messages:
+            - message11
+            - message12
+    n2:
+        name: n2
+        validators:
+            - n0
+            - n1
+            - n3
+            - n4
+        messages:
+            - message21
+            - message22
+    n3:
+        name: n3
+        validators:
+            - n1
+            - n2
+            - n0
+            - n5
+        messages:
+            - message31
+            - message32
+    n4:
+        name: n4
+        validators:
+            - n1
+            - n2
+        messages:
+            - message41
+            - message42
+    n5:
+        name: n5
+        validators:
+            - n3
+            - n0
+        messages:
+            - message51
+            - message52
