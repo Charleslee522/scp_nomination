@@ -18,7 +18,7 @@ func TestLedgerFederatedVotingBasic(t *testing.T) {
 	v11 := Value{Data: "value11"}
 	v12 := Value{Data: "value12"}
 
-	var ledger0 *Ledger = NewLedger(node0, nodes, 4)
+	var ledger0 *Ledger = NewLedger(node0, nodes, 80)
 	ledger0.Consensus.isInTest = true
 	vPool1 := []Value{v11, v12}
 
@@ -74,7 +74,7 @@ func TestLedgerFederatedVotingReceiveDuplicatedMessage(t *testing.T) {
 	v11 := Value{Data: "value11"}
 	v12 := Value{Data: "value12"}
 
-	var ledger0 *Ledger = NewLedger(node0, nodes, 4)
+	var ledger0 *Ledger = NewLedger(node0, nodes, 80)
 	ledger0.Consensus.isInTest = true
 	vPool1 := []Value{v11, v12}
 
@@ -141,7 +141,7 @@ func TestLedgerFederatedVotingByBlockingThreshold(t *testing.T) {
 	v11 := Value{Data: "value11"}
 	v12 := Value{Data: "value12"}
 
-	var ledger0 *Ledger = NewLedger(node0, nodes, 4)
+	var ledger0 *Ledger = NewLedger(node0, nodes, 80)
 	ledger0.Consensus.isInTest = true
 	vPool1 := []Value{v11, v12}
 

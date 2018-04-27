@@ -1,6 +1,9 @@
 package common
 
-import "strings"
+import (
+	"log"
+	"strings"
+)
 
 type VotingBox struct {
 	Voting map[Value]map[string]bool
@@ -19,7 +22,7 @@ func (v *VotingBox) HasValue(value Value) bool {
 func (v *VotingBox) ContainValueString(value Value) bool {
 	for key, _ := range v.Voting {
 		if key.Data != value.Data && strings.Contains(key.Data, value.Data) {
-			// log.Printf("%s contain %s", key.Data, value.Data)
+			log.Printf("%s contain %s", key.Data, value.Data)
 			return true
 		}
 	}
