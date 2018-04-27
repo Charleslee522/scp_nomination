@@ -1,7 +1,6 @@
 package common
 
 import (
-	"log"
 	"strings"
 )
 
@@ -22,7 +21,7 @@ func (v *VotingBox) HasValue(value Value) bool {
 func (v *VotingBox) ContainValueString(value Value) bool {
 	for key, _ := range v.Voting {
 		if key.Data != value.Data && strings.Contains(key.Data, value.Data) {
-			log.Printf("%s contain %s", key.Data, value.Data)
+			// log.Printf("%s contain %s", key.Data, value.Data)
 			return true
 		}
 	}
@@ -37,11 +36,13 @@ func (v *VotingBox) Count(value Value) int {
 	}
 }
 
-func (v *VotingBox) Add(value Value, nodeName string) {
+func (v *VotingBox) Add(value Value, nodeName string) bool {
 	if !v.ContainValueString(value) {
 		if v.Voting[value] == nil {
 			v.Voting[value] = make(map[string]bool)
 		}
 		v.Voting[value][nodeName] = true
+		return true
 	}
+	return false
 }

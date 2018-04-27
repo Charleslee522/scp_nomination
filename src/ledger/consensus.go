@@ -45,6 +45,8 @@ type Consensus struct {
 	selfMessageState map[Value]FederatedVotingState
 
 	confirmValues []Value
+	invalidValues []Value
+	Values        []Value
 	Validators    []Node
 	channels      ChannelType
 	roundChannels ChannelType
@@ -146,7 +148,10 @@ func (c *Consensus) AppendVotes(values []Value, nodeName string) {
 			continue
 		}
 
-		c.votes.Add(value, nodeName)
+		if !c.votes.Add(value, nodeName) {
+			log.Println(c.nodeName, "append invalid Value", value)
+			c.invalidValues = append(c.invalidValues, value)
+		}
 		if c.selfMessageState[value] == NONE {
 			c.selfMessageState[value] = VOTES
 		}
@@ -210,6 +215,15 @@ func (c *Consensus) isOutsider() bool {
 	return false
 }
 
+func (c *Consensus) isInvalidValue(value Value) bool {
+	for _, invalidValue := range c.invalidValues {
+		if invalidValue == value {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Consensus) echo() {
 	log.Println(c.nodeName, " echo")
 	if c.isOutsider() {
@@ -220,11 +234,18 @@ func (c *Consensus) echo() {
 	votes := []Value{}
 	accepted := []Value{}
 	for value, state := range c.selfMessageState {
+		if c.isInvalidValue(value) {
+			log.Println(c.nodeName, "invalid Value", value)
+			continue
+		}
 		if state == VOTES || state == ACCEPTED {
 			votes = append(votes, value)
 		} else {
 			// do nothing
 		}
+	}
+	if len(votes)+len(accepted) == 0 {
+		return
 	}
 	msg := SCPNomination{Votes: votes, Accepted: accepted, NodeName: c.nodeName}
 	for _, node := range c.Validators {
