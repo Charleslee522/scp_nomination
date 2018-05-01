@@ -26,6 +26,41 @@ func TestLedgerLeaderElection(t *testing.T) {
 	if ledger0.Consensus.GetRoundLeader() != "n0" {
 		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n0")
 	}
+
+	ledger0.Consensus.Round = 3
+	if ledger0.Consensus.GetRoundLeader() != "n3" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n3")
+	}
+
+	ledger0.Consensus.Round = 4
+	if ledger0.Consensus.GetRoundLeader() != "n4" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n4")
+	}
+
+	ledger0.Consensus.Round = 5
+	if ledger0.Consensus.GetRoundLeader() != "n4" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n4")
+	}
+
+	ledger0.Consensus.Round = 6
+	if ledger0.Consensus.GetRoundLeader() != "n0" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n0")
+	}
+
+	ledger0.Consensus.Round = 7
+	if ledger0.Consensus.GetRoundLeader() != "n4" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n4")
+	}
+
+	ledger0.Consensus.Round = 8
+	if ledger0.Consensus.GetRoundLeader() != "n0" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n0")
+	}
+
+	ledger0.Consensus.Round = 9
+	if ledger0.Consensus.GetRoundLeader() != "n2" {
+		t.Errorf("ledger0 Leader %s, want %s", ledger0.Consensus.GetRoundLeader(), "n2")
+	}
 }
 func TestLedgerLeaderElection2(t *testing.T) {
 	var node0 Node = Node{Name: "n0"}
