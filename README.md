@@ -2,18 +2,34 @@
 
 Prototype implementation of nomination protocol in [stellar-core](https://github.com/stellar/stellar-core)
 
-## Installation
+## Installation(Mac OS X)
 
 To install and deploy the source, you need to install these packages,
 
- - golang
+ - go: 1.10.1 or higher
+
+ ```
+ $ brew update
+ $ brew install golang
+
+ $ export GOPATH=$HOME/go # set your path
+ $ export GOROOT=/usr/local/opt/go/libexec
+ $ export PATH=$PATH:$GOPATH/bin
+ $ export PATH=$PATH:$GOROOT/bin
+ ```
 
 Clone this repository and run.
 
+## Clone Repository
+
+```
+go get github.com/owlchain/scp-prototype
+```
+
 ## Test Run
 
-There are 
 ```sh
+$ cd $GOPATH/src/github.com/Charleslee522/scp_nomination
 $ cd src/ledger
 $ go test
 ```
