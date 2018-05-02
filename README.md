@@ -29,7 +29,7 @@ go get github.com/Charleslee522/scp_nomination
 ## Test Run
 
 ```sh
-$ cd $GOPATH/src/github.com/Charleslee522/scp_nomination
+$ cd $GOPATH/src/github.com/owlchain/scp-prototype
 $ cd src/ledger
 $ go test
 ```
