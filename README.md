@@ -23,7 +23,7 @@ Clone this repository and run.
 ## Clone Repository
 
 ```
-go get github.com/owlchain/scp-prototype
+go get github.com/Charleslee522/scp_nomination
 ```
 
 ## Test Run
